@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, email, phone, enquiry_type, subject, message } = body;
 
-    if (!name || !email || !enquiry_type || !subject || !message) {
+    if (!name || !email || !enquiry_type || !message) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
         email: email.trim().toLowerCase(),
         phone: phone?.trim() || null,
         enquiry_type,
-        subject: subject.trim(),
         message: message.trim(),
       })
       .select('id')
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
     console.log('Supabase enquiry inserted successfully', { id: data?.id });
 
     return NextResponse.json(
-      { success: true, message: 'Message sent successfully', id: data?.id },
+      { success: true, id: data?.id },
       { status: 200 }
     );
   } catch (error) {

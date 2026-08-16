@@ -8,21 +8,32 @@ import { cn } from '@/lib/utils';
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
+type EnquiryType = 'Student / Private Coding Classes' | 'Freelance / Website Development';
+
 interface FormData {
   name: string;
   email: string;
+  phone: string;
+  enquiry_type: EnquiryType;
+  subject: string;
   message: string;
 }
 
 interface FormErrors {
   name?: string;
   email?: string;
+  phone?: string;
+  enquiry_type?: string;
+  subject?: string;
   message?: string;
 }
 
 const initialFormData: FormData = {
   name: '',
   email: '',
+  phone: '',
+  enquiry_type: 'Student / Private Coding Classes',
+  subject: '',
   message: '',
 };
 
@@ -39,6 +50,20 @@ const validateForm = (data: FormData): FormErrors => {
     errors.email = 'Email is required';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = 'Please enter a valid email address';
+  }
+  
+  if (data.phone.trim() && !/^[\d\s\-\+\(\)]{10,}$/.test(data.phone)) {
+    errors.phone = 'Please enter a valid phone number';
+  }
+  
+  if (!data.enquiry_type) {
+    errors.enquiry_type = 'Please select an enquiry type';
+  }
+  
+  if (!data.subject.trim()) {
+    errors.subject = 'Subject is required';
+  } else if (data.subject.trim().length < 3) {
+    errors.subject = 'Subject must be at least 3 characters';
   }
   
   if (!data.message.trim()) {
@@ -71,7 +96,17 @@ export function Contact() {
     return () => observer.disconnect();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Auto-hide success message after 5 seconds
+  useEffect(() => {
+    if (status === 'success') {
+      const timer = setTimeout(() => {
+        setStatus('idle');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name as keyof FormErrors]) {
@@ -98,8 +133,8 @@ export function Contact() {
       });
       
       if (response.ok) {
-        setStatus('success');
         setFormData(initialFormData);
+        setStatus('success');
       } else {
         throw new Error('Failed to send message');
       }
@@ -235,6 +270,58 @@ export function Contact() {
                 required
                 disabled={status === 'submitting'}
                 autoComplete="email"
+              />
+              <Input
+                name="phone"
+                type="tel"
+                label="Phone Number (Optional)"
+                placeholder="+1 (555) 000-0000"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                disabled={status === 'submitting'}
+                autoComplete="tel"
+              />
+              <div>
+                <label htmlFor="enquiry_type" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                  Enquiry Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="enquiry_type"
+                  name="enquiry_type"
+                  value={formData.enquiry_type}
+                  onChange={handleChange}
+                  disabled={status === 'submitting'}
+                  required
+                  className={cn(
+                    'w-full px-4 py-3 rounded-xl border bg-white dark:bg-zinc-900',
+                    'text-zinc-950 dark:text-white',
+                    'placeholder:text-zinc-400 dark:placeholder:text-zinc-500',
+                    'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                    errors.enquiry_type
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-zinc-200 dark:border-zinc-700'
+                  )}
+                >
+                  <option value="" disabled>Select an option</option>
+                  <option value="Student / Private Coding Classes">Student / Private Coding Classes</option>
+                  <option value="Freelance / Website Development">Freelance / Website Development</option>
+                </select>
+                {errors.enquiry_type && (
+                  <p className="mt-1.5 text-sm text-red-500" role="alert">{errors.enquiry_type}</p>
+                )}
+              </div>
+              <Input
+                name="subject"
+                label="Subject"
+                placeholder="Brief subject line"
+                value={formData.subject}
+                onChange={handleChange}
+                error={errors.subject}
+                required
+                disabled={status === 'submitting'}
+                autoComplete="off"
               />
               <Textarea
                 name="message"
