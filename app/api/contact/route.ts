@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, phone, enquiry_type, message } = body;
+    const { name, email, phone, enquiry_type, subject, message } = body;
 
     if (!name || !email || !enquiry_type || !message) {
       return NextResponse.json(
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
         email: email.trim().toLowerCase(),
         phone: phone?.trim() || null,
         enquiry_type,
+        subject: subject?.trim() || `Enquiry: ${enquiry_type}`,
         message: message.trim(),
       })
       .select('id')
